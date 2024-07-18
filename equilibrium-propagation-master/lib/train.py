@@ -146,7 +146,7 @@ def train(model, train_loader, dynamics, w_optimizer, fast_init):
             logging.info('{:.0f}%:\tE: {:.2f}\tdE {:.2f}\tbatch_acc {:.4f}'.format(
                 100. * batch_idx / len(train_loader), torch.mean(model.E), dE, batch_acc))
 
-def train_backprop(model, train_loader, criterion, optimizer, device='cpu'):
+def train_backprop(model, train_loader, criterion, optimizer):
     """
     Train a model using backpropagation.
 
@@ -155,7 +155,6 @@ def train_backprop(model, train_loader, criterion, optimizer, device='cpu'):
         train_loader: DataLoader containing the training dataset.
         criterion: Loss function used to compute the model loss.
         optimizer: torch.optim.Optimizer object for updating model parameters.
-        device: The device (CPU or GPU) the training should run on.
     """
     model.train()  # Set the model to training mode
     total_loss = 0.0
@@ -163,7 +162,7 @@ def train_backprop(model, train_loader, criterion, optimizer, device='cpu'):
     total = 0
     
     for batch_idx, (inputs, targets) in enumerate(train_loader):
-        inputs, targets = inputs.to(device), targets.to(device)
+        inputs, targets = inputs.to(config.device), targets.to(config.device)
         
         # Forward pass
         outputs = model(inputs)
