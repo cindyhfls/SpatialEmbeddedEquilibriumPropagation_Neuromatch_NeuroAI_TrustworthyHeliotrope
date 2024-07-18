@@ -299,10 +299,9 @@ class RestrictedHopfield(EnergyBasedModel):
      
 
 class MLP(torch.nn.Module):
-    def __init__(self, dimensions, criterion, batch_size, phi):
+    def __init__(self, dimensions, batch_size, phi):
             super(MLP, self).__init__() 
             self.dimensions = dimensions
-            self.criterion = criterion
             self.batch_size = batch_size
             self.phi = phi
             self.layers = torch.nn.ModuleList(
@@ -311,15 +310,9 @@ class MLP(torch.nn.Module):
     
     def forward(self,x):
         for i, layer in enumerate(self.layers):
-            x = layer(x)
-            if i < len(self.layers) - 1:  # Apply activation function to all but the output layer
-                x = self.phi(x)
+          x = layer(x)
+          x = self.phi[i](x)
         return x
-    
-    def backward(self, output, target):
-        loss = self.criterion(output, target)
-        loss.backward()
-        return loss
 
     def fast_init(self):
             raise NotImplementedError("Fast initialization not possible for the Hopfield model.")
