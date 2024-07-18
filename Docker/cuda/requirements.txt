@@ -1,0 +1,44 @@
+numpy
+scipy
+matplotlib
+Pillow
+torch
+torchvision
+transformers
+tqdm
+
+# Repr. & stat. analysis
+rsatoolbox
+
+# Plotting
+seaborn
+plotly
+notebook
+
+
+# gradio==4.19.2
+# networkx==3.2.1
+# ipywidgets==8.1.2
+# requests==2.31.0
+# scikit-learn==1.4.1.post1
+# scikit-image==0.19.2
+# protobuf==3.20.*
+# numba==0.59.0
+# sentencepiece==0.2.0
+# python-dotenv==1.0.1
+# gymnasium==0.29.1
+# pytorch_lightning==2.2.4
+# jupyter_ui_poll==0.2.2
+
+# ffmpeg
+# imageio-ffmpeg
+# torchlens
+
+# git+https://github.com/neuromatch/TextRecognitionDataGenerator#egg=trdg
+# git+https://github.com/neuromatch/GNS-Modeling#egg=gns
+# git+https://github.com/neuromatch/pyBPL#egg=pybpl
+# git+https://github.com/OlivierCodol/MotorNet.git
+# git+https://github.com/ctn-waterloo/sspspace@neuromatch#egg=sspspace
+# git+https://github.com/mitchellostrow/DSA#egg=DSA
+
+# ipympl # enables using the interactive features of matplotlib in Jupyter Notebooks, Jupyter Lab, Google Colab, VSCode notebooks
