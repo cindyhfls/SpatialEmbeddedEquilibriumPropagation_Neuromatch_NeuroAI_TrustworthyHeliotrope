@@ -296,7 +296,7 @@ class RestrictedHopfield(EnergyBasedModel):
         if self.c_energy.target is not None:
             self.E += self.c_energy.compute_energy(self.u[-1])
 
-Class MLP(torch.nn.Module):
+class MLP(torch.nn.Module):
     def __init__(self, dimensions, criterion, batch_size, phi):
             super(MLP, self).__init__(dimensions, criterion, batch_size, phi) 
             self.dimensions = dimensions
