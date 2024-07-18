@@ -145,3 +145,50 @@ def train(model, train_loader, dynamics, w_optimizer, fast_init):
             batch_acc = float(torch.sum(prediction == y_batch.argmax(dim=1))) / x_batch.size(0)
             logging.info('{:.0f}%:\tE: {:.2f}\tdE {:.2f}\tbatch_acc {:.4f}'.format(
                 100. * batch_idx / len(train_loader), torch.mean(model.E), dE, batch_acc))
+
+def train_backprop(model, train_loader, criterion, optimizer, device='cpu'):
+    """
+    Train a model using backpropagation.
+
+    Args:
+        model: A torch.nn.Module neural network model.
+        train_loader: DataLoader containing the training dataset.
+        criterion: Loss function used to compute the model loss.
+        optimizer: torch.optim.Optimizer object for updating model parameters.
+        device: The device (CPU or GPU) the training should run on.
+    """
+    model.train()  # Set the model to training mode
+    total_loss = 0.0
+    correct = 0
+    total = 0
+    
+    for batch_idx, (inputs, targets) in enumerate(train_loader):
+        inputs, targets = inputs.to(device), targets.to(device)
+        
+        # Forward pass
+        outputs = model(inputs)
+        
+        # Compute loss
+        loss = criterion(outputs, targets)
+        
+        # Backward pass and optimize
+        optimizer.zero_grad()  # Clear existing gradients
+        loss.backward()  # Backpropagate the error
+        optimizer.step()  # Update model parameters
+        
+        # Statistics
+        total_loss += loss.item()
+        _, predicted = torch.max(outputs.data, 1)
+        total += targets.size(0)
+        correct += (predicted == targets).sum().item()
+        
+        # Log every 10th of the dataset
+        if batch_idx % (len(train_loader) // 10) == 0:
+            logging.info('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+                epoch, batch_idx * len(inputs), len(train_loader.dataset),
+                100. * batch_idx / len(train_loader), loss.item()))
+    
+    # Log after each epoch
+    logging.info('Epoch Finished: Avg. Loss: {:.4f}, Accuracy: {:.2f}%'.format(
+        total_loss / len(train_loader), 100. * correct / total))
+
