@@ -135,7 +135,7 @@ def default_main(exp):
 	# Setup global logger and logging directory
 	config.setup_logging(cfg["energy"] if cfg["energy"] else "bp" + "_" + cfg["c_energy"] + "_" + cfg["dataset"],
 						dir=cfg['log_dir'])
-	logging.info(f"Cmd: {sys.argv}")
+	logging.info(f"Cmd: python {' '.join(sys.argv)}")
 	logging.info(f"Device:\n{config.device}")
 	# Run the script using the created parameter configuration
 	exp(cfg)
@@ -157,6 +157,7 @@ if __name__ == '__main__':
 	# Run the varying datapoints experiment
 	# default_main(vd_run_exp)
 	# Visualize results of vd_run_exp(cfg)
-	# vd_read_exp_data(file_glob='20240718_1713_bp_cross_entropy_mnist_N')
-	vd_read_exp_data(file_glob='20240718_1911_cond_gaussian_N')
+	# vd_read_exp_data(file_glob='20240718_1713_bp_cross_entropy_mnist_N', scalar_tag='test_loss')
+	# vd_read_exp_data(file_glob='20240718_1911_cond_gaussian_N', scalar_tag='test_acc')
+	vd_read_exp_data(file_glob='20240718_1921_restr_hopfield_N', scalar_tag='test_E')
 	

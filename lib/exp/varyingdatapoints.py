@@ -55,7 +55,7 @@ def run_exp(cfg):
 		writer.flush()
 		writer.close()
 
-def read_exp_data(file_glob):
+def read_exp_data(file_glob, scalar_tag):
 	training_points = (10, 100, 1000, 10000)
 	N_dict = OrderedDict()
 	for _point in training_points:
@@ -69,6 +69,7 @@ def read_exp_data(file_glob):
 		a = utils.extract_sacalars_from_tensorboard_ea(ea)
 		N_dict[f'{N_train_data}'] = {key:tuple(df.value.values) for key, df in a.items()}
 	# plot_data = {key:_dict['test_loss'] if 'test_loss' in _dict.keys() else _dict['test_E'] for key, _dict in N_dict.items()}
-	plot_data = {key:_dict['test_loss'] if 'test_loss' in _dict.keys() else _dict['test_acc'] for key, _dict in N_dict.items()}
+	plot_data = {key:_dict[scalar_tag] for key, _dict in N_dict.items()}
 	print(plot_data)
-	plot_varying_datapoints(plot_data, fig_name='BP_vd_N')
+	label_dict = {'test_loss': ('Test cost', 'log'),'test_acc':('Test accuracy','linear'), 'test_E':('Test E','symlog')}
+	plot_varying_datapoints(plot_data, fig_name='BP_vd_N', label=label_dict[scalar_tag][0], yscale=label_dict[scalar_tag][1])
