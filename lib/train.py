@@ -50,6 +50,7 @@ def predict_batch(model, x_batch, dynamics, fast_init):
         Softmax classification probabilities for the given data batch
     """
     # Initialize the neural state variables
+    model.batch_size = int(x_batch.shape[0])
     model.reset_state()
 
     # Clamp the input to the test sample, and remove nudging from ouput
@@ -113,10 +114,12 @@ def train(model, train_loader, dynamics, w_optimizer, fast_init):
         fast_init: Boolean to specify if fast feedforward initilization
             is used for the prediction
     """
+    train_E, correct, total = 0.0, 0.0, 0.0
     for batch_idx, (x_batch, y_batch) in enumerate(train_loader):
         x_batch, y_batch = x_batch.to(config.device), y_batch.to(config.device)
 
         # Reinitialize the neural state variables
+        model.batch_size = int(x_batch.shape[0])
         model.reset_state()
 
         # Clamp the input to the training sample
@@ -290,6 +293,7 @@ def run_model_training(cfg, model:torch.nn.Module, cost, optimizer:torch.optim.O
 	PATIENCE = 2
 	wait = 0
 	best_val_acc = 0.0
+
 
 	for epoch in range(1, cfg['epochs'] + 1):
 		# Training

@@ -68,6 +68,7 @@ def read_exp_data(file_glob):
 		ea = utils.load_tensorboard_data(file)
 		a = utils.extract_sacalars_from_tensorboard_ea(ea)
 		N_dict[f'{N_train_data}'] = {key:tuple(df.value.values) for key, df in a.items()}
-	plot_data = {key:_dict['test_loss'] for key, _dict in N_dict.items()}
+	# plot_data = {key:_dict['test_loss'] if 'test_loss' in _dict.keys() else _dict['test_E'] for key, _dict in N_dict.items()}
+	plot_data = {key:_dict['test_loss'] if 'test_loss' in _dict.keys() else _dict['test_acc'] for key, _dict in N_dict.items()}
 	print(plot_data)
 	plot_varying_datapoints(plot_data, fig_name='BP_vd_N')

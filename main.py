@@ -151,11 +151,12 @@ def plot_single(file='./log/events.out.tfevents.1721302333.5363a0cc7039.153444.0
 
 if __name__ == '__main__':
 	# Train a single model
-	default_main(run_energy_model_mnist)
-	# Run the varying datapoints experiment
-	# default_main(vd_run_exp)
+	# default_main(run_energy_model_mnist)
 	# Demo for plot of a single training run (all captured metrics)
 	# plot_single()
+	# Run the varying datapoints experiment
+	# default_main(vd_run_exp)
 	# Visualize results of vd_run_exp(cfg)
 	# vd_read_exp_data(file_glob='20240718_1713_bp_cross_entropy_mnist_N')
+	vd_read_exp_data(file_glob='20240718_1911_cond_gaussian_N')
 	

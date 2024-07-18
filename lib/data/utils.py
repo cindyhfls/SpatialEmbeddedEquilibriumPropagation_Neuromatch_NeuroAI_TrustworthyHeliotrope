@@ -44,11 +44,11 @@ def get_random_sample_train_val(train_dataset:torch.utils.data.Dataset, val_data
         train_dataset (torch.utils.data.Dataset): A train dataset, can be obtained from a DataLoader: DataLoader.dataset
         val_dataset (torch.utils.data.Dataset): A validation dataset, can be obtained from a DataLoader: DataLoader.dataset
         batch_size (int): Batch size
-        N_train_data (int): Number of samples in the train subset (~1/9 the number of samples in the validation subset, up to 30 for the validation subset)
+        N_train_data (int): Number of samples in the train subset (~1/9 the number of samples in the validation subset, at least 30 for the validation subset)
 
     Returns:
         (torch.utils.data.DataLoader): train DataLoader for a subset of size **N_train_data** from **train_dataset** with batch size **batch_size**
-        (torch.utils.data.DataLoader): DataLoader for a subset of size approximately **N_train_data**/9 (up to 30 max) from **val_dataset** with batch size **batch_size**
+        (torch.utils.data.DataLoader): DataLoader for a subset of size approximately **N_train_data**/9 (at least 30) from **val_dataset** with batch size **batch_size**
     """
     sampled_train_loader = get_random_sample_dataloader(train_dataset, batch_size, N_train_data)
 
