@@ -1,37 +1,19 @@
 # SpatialEmbeddedEquilibriumPropagation_Neuromatch_NeuroAI_TrustworthyHeliotrope
 Code for Trustworthy Heliotrope group "Equilibrium" team
 
-
-
-```python
-# Run MLP with BP
-python main_RR.py --c_energy cross_entropy --seed 2019 --epochs 2
-# Run 'cond_gaussian' energy model
-python main_RR.py --energy cond_gaussian --c_energy cross_entropy --seed 2019 --epochs 2
-```
-
----
-From equilibrium-propagation-master [TO BE ADPATED SOON]
-
-
 ## Usage
 You can run the models using the `run_energy_model_mnist.py` script which provides the following options:
 ```
-python run_energy_model_mnist.py -h
-usage: run_energy_model_mnist.py [-h] [--batch_size BATCH_SIZE]
-                                 [--c_energy {cross_entropy,squared_error}]
-                                 [--dimensions DIMENSIONS [DIMENSIONS ...]]
-                                 [--energy {cond_gaussian,restr_hopfield}]
-                                 [--epochs EPOCHS] [--fast_ff_init]
-                                 [--learning_rate LEARNING_RATE]
-                                 [--log_dir LOG_DIR]
-                                 [--nonlinearity {leaky_relu,relu,sigmoid,tanh}]
-                                 [--optimizer {adam,adagrad,sgd}]
-                                 [--seed SEED]
+python main.py -h
+usage: main.py [-h] [--batch_size BATCH_SIZE] [--c_energy {cross_entropy,squared_error}]
+               [--dimensions DIMENSIONS [DIMENSIONS ...]] [--energy {cond_gaussian,restr_hopfield,None}] [--epochs EPOCHS]
+               [--fast_ff_init] [--learning_rate LEARNING_RATE] [--log_dir LOG_DIR]
+               [--nonlinearity {leaky_relu,relu,sigmoid,tanh}] [--optimizer {adam,adagrad,sgd}] [--seed SEED]
+               [--early-stopping] [--summary-writer]
 
 Train an energy-based model on MNIST using Equilibrium Propagation.
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   --batch_size BATCH_SIZE
                         Size of mini batches during training.
@@ -39,7 +21,7 @@ optional arguments:
                         Supervised learning cost function.
   --dimensions DIMENSIONS [DIMENSIONS ...]
                         Dimensions of the neural network.
-  --energy {cond_gaussian,restr_hopfield}
+  --energy {cond_gaussian,restr_hopfield,None}
                         Type of energy-based model.
   --epochs EPOCHS       Number of epochs to train.
   --fast_ff_init        Flag to enable fast feedforward initialization.
@@ -51,9 +33,33 @@ optional arguments:
   --optimizer {adam,adagrad,sgd}
                         Optimizer used to train the model.
   --seed SEED           Random seed for pytorch
+  --early-stopping      Toogle early stopping
+  --summary-writer      Toggle SummaryWriter
 ```
 
+## Usage Example
+
+```python
+# Run MLP with BP
+python main.py --c_energy cross_entropy --seed 2019 --epochs 2
+# Run 'cond_gaussian' energy model
+python main.py --energy cond_gaussian --c_energy cross_entropy --seed 2019 --epochs 2
+```
+
+## Dosctings: Documenting a function
+
+To make use of auto-docstring in VSCode, you can install the extension: `autoDocstring - Python Docstring Generator` by Nils Werner.
+
+It makes use of the `docs_template.mustache` file, to generate a default docstring after you type `"""` under a function name. If you have typed your arguments like so `def get_random_sample_dataloader(dataset:torchvision.datasets, batch_size:int, M:int):`, it will automatically capture the arguments and their type.
+
+
+
+
+
+
 The default configurations for unspecified parameters are stored in `/etc/`.
+
+# From equilibrium-propagation-master [TO BE ADPATED SOON]
 
 ## Documentation
 [Documentation](https://smonsays.github.io/equilibrium-propagation/) is auto-generated from docstrings using `pdoc3 . --html --force --output-dir docs`.

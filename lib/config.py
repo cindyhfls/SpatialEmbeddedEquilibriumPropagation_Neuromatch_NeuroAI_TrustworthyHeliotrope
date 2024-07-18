@@ -27,6 +27,8 @@ from importlib import reload
 
 import torch
 
+from torch.utils.tensorboard import SummaryWriter
+
 # Global variables
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 log_dir = None
@@ -69,5 +71,20 @@ def setup_logging(name, dir=""):
             logging.StreamHandler()
         ])
     
+class dummySummaryWriter():
+    def add_scalar(self, *args, **kwargs):
+        pass
+    def flush(self):
+        pass
+    def close(self):
+        pass
 
+def setup_writer(no_dummy=True):
+    if not no_dummy:
+        return dummySummaryWriter()
 
+    for _h in logging._handlerList:
+        if isinstance(_h(), logging.FileHandler):
+            log_file_name = _h().baseFilename
+
+    return SummaryWriter(log_dir=log_dir, filename_suffix='-'+log_file_name.split('/')[-1].split('.')[0])

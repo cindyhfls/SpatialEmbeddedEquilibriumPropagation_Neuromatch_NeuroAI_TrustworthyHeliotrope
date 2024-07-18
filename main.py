@@ -2,6 +2,7 @@ import argparse
 import json
 import logging
 import sys
+import time
 from functools import partial
 
 import torch
@@ -9,6 +10,7 @@ import torch
 from lib import config, train, utils, seeds
 from lib.models import energy, mlp
 from lib.data import mnist as data
+from lib.plot import plot
 
 def load_default_config(energy):
 	"""
@@ -69,6 +71,10 @@ def parse_shell_args(args):
 						default=argparse.SUPPRESS, help="Optimizer used to train the model.")
 	parser.add_argument("--seed", type=int, default=argparse.SUPPRESS,
 						help="Random seed for pytorch")
+	parser.add_argument("--early-stopping", action='store_true',
+						help="Toogle early stopping")
+	parser.add_argument("--summary-writer", action='store_true',
+						help="Toggle SummaryWriter")
 
 	return vars(parser.parse_args(args))
 
@@ -80,6 +86,7 @@ def run_energy_model_mnist(cfg):
 	Args:
 		cfg: Dictionary defining parameters of the run
 	"""
+	writer = config.setup_writer(cfg['summary_writer'])
 	logging.info(f"Device:\n{config.device}")
 
 	# Initialize seed if specified (might slow down the model)
@@ -117,13 +124,13 @@ def run_energy_model_mnist(cfg):
 		test_dict = {'dynamics': cfg['dynamics'], 'fast_init': cfg["fast_ff_init"]}
 		train_model = partial(train.train, **train_dict, **test_dict)
 		test_model = partial(train.test, **test_dict)
-		legend = 'mean_E'
+		legend = 'E'
 	else:
 		train_dict = {'optimizer': w_optimizer}
 		test_dict = {'criterion': c_energy}
 		train_model = partial(train.train_backprop, **train_dict, **test_dict)
 		test_model = partial(train.test_backprop, **test_dict)
-		legend = 'mean_loss'
+		legend = 'loss'
 
 	# record the validation accuracy of each epoch for early stopping
 	PATIENCE = 2
@@ -132,16 +139,22 @@ def run_energy_model_mnist(cfg):
 
 	for epoch in range(1, cfg['epochs'] + 1):
 		# Training
-		train_model(model, mnist_train)
+		train_acc, train_energy = train_model(model, mnist_train)
+		# Summary writer
+		writer.add_scalar('train_acc', train_acc, epoch, time.time())
+		writer.add_scalar(f'train_{legend}', train_energy, epoch, time.time())
 
 		# Validation
 		val_acc, val_energy = test_model(model, mnist_val)
 
 		# Logging
 		logging.info(
-			"epoch: {} \t VAL val_acc: {:.4f} \t {}: {:.4f}".format(
+			"epoch: {} \t VAL val_acc: {:.4f} \t mean_{}: {:.4f}".format(
 				epoch, val_acc, legend, val_energy)
 		)
+		# Summary writer
+		writer.add_scalar('val_acc', val_acc, epoch, time.time())
+		writer.add_scalar(f'val_{legend}', val_energy, epoch, time.time())
 
 		# Testing
 		test_acc, test_energy = test_model(model, mnist_test)
@@ -151,19 +164,25 @@ def run_energy_model_mnist(cfg):
 			"epoch: {} \t TEST test_acc: {:.4f} \t {}: {:.4f}".format(
 				epoch, test_acc, legend, test_energy)
 		)
+		# Summary writer
+		writer.add_scalar('test_acc', test_acc, epoch, time.time())
+		writer.add_scalar(f'test_{legend}', test_energy, epoch, time.time())
 
 		# early stopping
-		if val_acc > best_val_acc:
-			best_val_acc = val_acc
-			wait = 0
-		else:
-			wait += 1
-			if wait >= PATIENCE:
-				logging.info(f'Early stopping at epoch {epoch}')
-				break
+		if cfg['early_stopping']:
+			if val_acc > best_val_acc:
+				best_val_acc = val_acc
+				wait = 0
+			else:
+				wait += 1
+				if wait >= PATIENCE:
+					logging.info(f'Early stopping at epoch {epoch}')
+					break
+	
+	writer.flush()
+	writer.close()
 
-
-if __name__ == '__main__':
+def default_main():
 	# Parse shell arguments as input configuration
 	user_config = parse_shell_args(sys.argv[1:])
 
@@ -176,6 +195,18 @@ if __name__ == '__main__':
 	# Setup global logger and logging directory
 	config.setup_logging(cfg["energy"] if cfg["energy"] else "bp" + "_" + cfg["c_energy"] + "_" + cfg["dataset"],
 						dir=cfg['log_dir'])
-
+	logging.info(f"Cmd: {sys.argv}")
 	# Run the script using the created paramter configuration
 	run_energy_model_mnist(cfg)
+
+def plot_single(file='./log/events.out.tfevents.1721302333.5363a0cc7039.153444.0bp_cross_entropy_mnist'):
+	ea = utils.load_tensorboard_data(file)
+	a = utils.extract_sacalars_from_tensorboard_ea(ea)
+	a= {key:tuple(df.value.values) for key, df in a.items()}
+	plot.plot_single_model_train_metrics(a)
+
+
+if __name__ == '__main__':
+	default_main()
+	# plot_single()
+	

@@ -146,6 +146,14 @@ def train(model, train_loader, dynamics, w_optimizer, fast_init):
             batch_acc = float(torch.sum(prediction == y_batch.argmax(dim=1))) / x_batch.size(0)
             logging.info('{:.0f}%:\tE: {:.2f}\tdE {:.2f}\tbatch_acc {:.4f}'.format(
                 100. * batch_idx / len(train_loader), torch.mean(model.E), dE, batch_acc))
+        
+        with torch.no_grad():
+            # Compute train batch accuracy, energy and store number of seen batches
+            correct += float(torch.sum(prediction == y_batch.argmax(dim=1)))
+            train_E += float(torch.sum(model.E))
+            total += x_batch.size(0)
+
+    return correct / total, train_E / total
 
 def train_backprop(model, train_loader, criterion, optimizer):
     """
@@ -190,9 +198,15 @@ def train_backprop(model, train_loader, criterion, optimizer):
                 batch_idx * len(inputs), len(train_loader.dataset),
                 100. * batch_idx / len(train_loader), loss.item()))
     
+    # Calculate accuracy and average loss
+    accuracy = 100. * correct / total
+    avg_loss = total_loss / len(train_loader)
+
     # Log after each epoch
     logging.info('Epoch Finished: Avg. Loss: {:.4f}, Accuracy: {:.2f}%'.format(
-        total_loss / len(train_loader), 100. * correct / total))
+        accuracy, avg_loss))
+    
+    return accuracy, avg_loss
 
 def test_backprop(model, test_loader, criterion):
     """

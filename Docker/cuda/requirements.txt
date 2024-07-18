@@ -4,6 +4,7 @@ matplotlib
 Pillow
 torch
 torchvision
+tensorboard
 transformers
 tqdm
 
