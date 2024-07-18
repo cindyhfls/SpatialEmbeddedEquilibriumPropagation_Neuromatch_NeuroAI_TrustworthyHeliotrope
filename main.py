@@ -2,15 +2,15 @@ import argparse
 import json
 import logging
 import sys
-import time
-from functools import partial
+# import time
 
-import torch
+# import torch
 
 from lib import config, train, utils, seeds
 from lib.models import energy, mlp
-from lib.data import mnist as data
 from lib.plot import plot
+from lib.data import mnist as data_mnist
+from lib.exp.varyingdatapoints import run_exp as vd_run_exp, read_exp_data as vd_read_exp_data
 
 def load_default_config(energy):
 	"""
@@ -86,13 +86,11 @@ def run_energy_model_mnist(cfg):
 	Args:
 		cfg: Dictionary defining parameters of the run
 	"""
-	writer = config.setup_writer(cfg['summary_writer'])
 	logging.info(f"Device:\n{config.device}")
 
 	# Initialize seed if specified (might slow down the model)
 	if cfg['seed'] is not None:
 		seeds.set_seed(cfg['seed'])
-		
 
 	# Create the cost function to be optimized by the model
 	c_energy = utils.create_cost(cfg['c_energy'], cfg["energy"], cfg['beta'])
@@ -114,75 +112,17 @@ def run_energy_model_mnist(cfg):
 	w_optimizer = utils.create_optimizer(model, cfg['optimizer'],  lr=cfg['learning_rate'])
 
 	# Create torch data loaders with the MNIST data set
-	mnist_train, mnist_val, mnist_test = data.create_mnist_loaders(cfg['batch_size'])
+	train_dataloader, val_dataloader, test_dataloader = data_mnist.create_mnist_loaders(cfg['batch_size'])
 
 	logging.info("Start training with parametrization:\n{}".format(
 		json.dumps(cfg, indent=4, sort_keys=True)))
 
-	if cfg["energy"]:
-		train_dict = {'w_optimizer': w_optimizer}
-		test_dict = {'dynamics': cfg['dynamics'], 'fast_init': cfg["fast_ff_init"]}
-		train_model = partial(train.train, **train_dict, **test_dict)
-		test_model = partial(train.test, **test_dict)
-		legend = 'E'
-	else:
-		train_dict = {'optimizer': w_optimizer}
-		test_dict = {'criterion': c_energy}
-		train_model = partial(train.train_backprop, **train_dict, **test_dict)
-		test_model = partial(train.test_backprop, **test_dict)
-		legend = 'loss'
-
-	# record the validation accuracy of each epoch for early stopping
-	PATIENCE = 2
-	wait = 0
-	best_val_acc = 0.0
-
-	for epoch in range(1, cfg['epochs'] + 1):
-		# Training
-		train_acc, train_energy = train_model(model, mnist_train)
-		# Summary writer
-		writer.add_scalar('train_acc', train_acc, epoch, time.time())
-		writer.add_scalar(f'train_{legend}', train_energy, epoch, time.time())
-
-		# Validation
-		val_acc, val_energy = test_model(model, mnist_val)
-
-		# Logging
-		logging.info(
-			"epoch: {} \t VAL val_acc: {:.4f} \t mean_{}: {:.4f}".format(
-				epoch, val_acc, legend, val_energy)
-		)
-		# Summary writer
-		writer.add_scalar('val_acc', val_acc, epoch, time.time())
-		writer.add_scalar(f'val_{legend}', val_energy, epoch, time.time())
-
-		# Testing
-		test_acc, test_energy = test_model(model, mnist_test)
-
-		# Logging
-		logging.info(
-			"epoch: {} \t TEST test_acc: {:.4f} \t {}: {:.4f}".format(
-				epoch, test_acc, legend, test_energy)
-		)
-		# Summary writer
-		writer.add_scalar('test_acc', test_acc, epoch, time.time())
-		writer.add_scalar(f'test_{legend}', test_energy, epoch, time.time())
-
-		# early stopping
-		if cfg['early_stopping']:
-			if val_acc > best_val_acc:
-				best_val_acc = val_acc
-				wait = 0
-			else:
-				wait += 1
-				if wait >= PATIENCE:
-					logging.info(f'Early stopping at epoch {epoch}')
-					break
-	
+	writer = config.setup_writer(cfg['summary_writer'])
+	train.run_model_training(cfg, model, cost=c_energy, optimizer=w_optimizer, train_dataloader=train_dataloader, val_dataloader=val_dataloader, test_dataloader=test_dataloader, writer=writer)
 	writer.flush()
 	writer.close()
 
-def default_main():
+def default_main(exp):
 	# Parse shell arguments as input configuration
 	user_config = parse_shell_args(sys.argv[1:])
 
@@ -196,8 +136,11 @@ def default_main():
 	config.setup_logging(cfg["energy"] if cfg["energy"] else "bp" + "_" + cfg["c_energy"] + "_" + cfg["dataset"],
 						dir=cfg['log_dir'])
 	logging.info(f"Cmd: {sys.argv}")
-	# Run the script using the created paramter configuration
-	run_energy_model_mnist(cfg)
+	logging.info(f"Device:\n{config.device}")
+	# Run the script using the created parameter configuration
+	exp(cfg)
+
+
 
 def plot_single(file='./log/events.out.tfevents.1721302333.5363a0cc7039.153444.0bp_cross_entropy_mnist'):
 	ea = utils.load_tensorboard_data(file)
@@ -207,6 +150,12 @@ def plot_single(file='./log/events.out.tfevents.1721302333.5363a0cc7039.153444.0
 
 
 if __name__ == '__main__':
-	default_main()
+	# Train a single model
+	default_main(run_energy_model_mnist)
+	# Run the varying datapoints experiment
+	# default_main(vd_run_exp)
+	# Demo for plot of a single training run (all captured metrics)
 	# plot_single()
+	# Visualize results of vd_run_exp(cfg)
+	# vd_read_exp_data(file_glob='20240718_1713_bp_cross_entropy_mnist_N')
 	

@@ -1,6 +1,21 @@
 # SpatialEmbeddedEquilibriumPropagation_Neuromatch_NeuroAI_TrustworthyHeliotrope
 Code for Trustworthy Heliotrope group "Equilibrium" team
 
+
+## Choose the experiment or data visualization
+
+For now, it is a switch by hand in `main.py`, uncomment the function you want to run, and comment the others:
+```python
+## Train a single model
+default_main(run_energy_model_mnist)
+## Demo for plot of a single training run (all captured metrics): (adjust the argument according to the generated data)
+# plot_single()
+## Run the varying datapoints experiment:
+# default_main(vd_run_exp)
+## Visualize results of vd_run_exp(cfg): (adjust the argument according to the generated data)
+# vd_read_exp_data(file_glob='20240718_1713_bp_cross_entropy_mnist_N')
+```
+
 ## Usage
 You can run the models using the `run_energy_model_mnist.py` script which provides the following options:
 ```

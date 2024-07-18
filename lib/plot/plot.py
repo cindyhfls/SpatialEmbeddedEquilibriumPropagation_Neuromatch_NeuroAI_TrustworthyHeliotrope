@@ -56,15 +56,14 @@ def plot_single_model_train_metrics(value_dict):
 		plt.savefig('./log/test_plot.pdf')
 
 
-# TODO: Modify accordingly
-def plot_varying_datapoints():
+def plot_varying_datapoints(plot_data, fig_name):
 	# Create a single plot for all training costs with a logarithmic scale
 	with plt.xkcd():
 		plt.figure(figsize=(8, 6))  # Set the figure size
-
-		for i, n in enumerate(training_points):
-			epochs = my_epoch_Classification[i]
-			test_cost = my_test_cost_Classification[i]
+		
+		for n, _data in plot_data.items():
+			epochs = range(1,len(_data)+1)
+			test_cost = _data
 			plt.plot(epochs, test_cost, marker='o', linestyle='-', label=f'{n} training points')
 
 		plt.xlabel('Epochs')
@@ -73,6 +72,7 @@ def plot_varying_datapoints():
 		plt.yscale('log')
 		plt.legend()
 		plt.grid(True)
-		plt.show()
+		plt.savefig(f'./log/{fig_name}.pdf')
+
 
 

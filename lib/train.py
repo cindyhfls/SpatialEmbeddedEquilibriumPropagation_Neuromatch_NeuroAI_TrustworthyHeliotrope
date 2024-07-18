@@ -20,13 +20,19 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+
+from functools import partial
+import time
+import torch
 import logging
 
-import torch
 
 from lib import config
 
 from lib.models.energy import EnergyBasedModel
+
+from lib.cost import CrossEntropy, SquaredError
+
 
 def predict_batch(model, x_batch, dynamics, fast_init):
     """
@@ -136,7 +142,7 @@ def train(model, train_loader, dynamics, w_optimizer, fast_init):
         model.w_optimize(free_grads, nudged_grads, w_optimizer)
 
         # Logging key statistics
-        if batch_idx % (len(train_loader) // 10) == 0:
+        if not (len(train_loader)>10) or batch_idx % (len(train_loader) // 10) == 0:
 
             # Extract prediction as the output unit with the strongest activity
             output = predict_batch(model, x_batch, dynamics, fast_init)
@@ -193,7 +199,7 @@ def train_backprop(model, train_loader, criterion, optimizer):
         correct += (predicted == torch.argmax(targets,1)).sum().item()
         
         # Log every 10th of the dataset
-        if batch_idx % (len(train_loader) // 10) == 0:
+        if not (len(train_loader)>10) or batch_idx % (len(train_loader) // 10) == 0:
             logging.info('[{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                 batch_idx * len(inputs), len(train_loader.dataset),
                 100. * batch_idx / len(train_loader), loss.item()))
@@ -204,7 +210,7 @@ def train_backprop(model, train_loader, criterion, optimizer):
 
     # Log after each epoch
     logging.info('Epoch Finished: Avg. Loss: {:.4f}, Accuracy: {:.2f}%'.format(
-        accuracy, avg_loss))
+        avg_loss, accuracy))
     
     return accuracy, avg_loss
 
@@ -251,3 +257,78 @@ def test_backprop(model, test_loader, criterion):
         avg_loss, accuracy))
 
     return accuracy, avg_loss
+
+
+def run_model_training(cfg, model:torch.nn.Module, cost, optimizer:torch.optim.Optimizer, train_dataloader:torch.utils.data.DataLoader, val_dataloader:torch.utils.data.DataLoader, test_dataloader:torch.utils.data.DataLoader, writer:torch.utils.tensorboard.SummaryWriter|config.dummySummaryWriter=config.dummySummaryWriter()):
+	"""Run a training for the given arguments.
+
+	Args:
+		cfg (_type_): _description_
+		model (torch.nn.Module): Model
+		cost (CEnergy | torch.nn.functional.loss): Cost function
+		optimizer (torch.optim.Optimizer): Optimizer
+		train_dataloader (torch.utils.data.DataLoader): Train set DataLoader
+		val_dataloader (torch.utils.data.DataLoader): Validation set DataLoader
+		test_dataloader (torch.utils.data.DataLoader): Test set DataLoader
+		writer (torch.utils.tensorboard.SummaryWriter|dummySummaryWriter): Tensorboard SummaryWriter or a dummy if no writer is required
+	"""
+
+	if cfg["energy"]:
+		train_dict = {'w_optimizer': optimizer}
+		test_dict = {'dynamics': cfg['dynamics'], 'fast_init': cfg["fast_ff_init"]}
+		train_model = partial(train, **train_dict, **test_dict)
+		test_model = partial(test, **test_dict)
+		legend = 'E'
+	else:
+		train_dict = {'optimizer': optimizer}
+		test_dict = {'criterion': cost}
+		train_model = partial(train_backprop, **train_dict, **test_dict)
+		test_model = partial(test_backprop, **test_dict)
+		legend = 'loss'
+
+	# record the validation accuracy of each epoch for early stopping
+	PATIENCE = 2
+	wait = 0
+	best_val_acc = 0.0
+
+	for epoch in range(1, cfg['epochs'] + 1):
+		# Training
+		train_acc, train_energy = train_model(model, train_dataloader)
+		# Summary writer
+		writer.add_scalar('train_acc', train_acc, epoch, time.time())
+		writer.add_scalar(f'train_{legend}', train_energy, epoch, time.time())
+
+		# Validation
+		val_acc, val_energy = test_model(model, val_dataloader)
+
+		# Logging
+		logging.info(
+			"epoch: {} \t VAL val_acc: {:.4f} \t mean_{}: {:.4f}".format(
+				epoch, val_acc, legend, val_energy)
+		)
+		# Summary writer
+		writer.add_scalar('val_acc', val_acc, epoch, time.time())
+		writer.add_scalar(f'val_{legend}', val_energy, epoch, time.time())
+
+		# Testing
+		test_acc, test_energy = test_model(model, test_dataloader)
+
+		# Logging
+		logging.info(
+			"epoch: {} \t TEST test_acc: {:.4f} \t {}: {:.4f}".format(
+				epoch, test_acc, legend, test_energy)
+		)
+		# Summary writer
+		writer.add_scalar('test_acc', test_acc, epoch, time.time())
+		writer.add_scalar(f'test_{legend}', test_energy, epoch, time.time())
+
+		# early stopping
+		if cfg['early_stopping']:
+			if val_acc > best_val_acc:
+				best_val_acc = val_acc
+				wait = 0
+			else:
+				wait += 1
+				if wait >= PATIENCE:
+					logging.info(f'Early stopping at epoch {epoch}')
+					break

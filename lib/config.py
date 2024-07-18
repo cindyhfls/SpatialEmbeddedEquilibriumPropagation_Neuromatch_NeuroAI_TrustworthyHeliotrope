@@ -79,7 +79,7 @@ class dummySummaryWriter():
     def close(self):
         pass
 
-def setup_writer(no_dummy=True):
+def setup_writer(no_dummy=True, suffix=''):
     if not no_dummy:
         return dummySummaryWriter()
 
@@ -87,4 +87,4 @@ def setup_writer(no_dummy=True):
         if isinstance(_h(), logging.FileHandler):
             log_file_name = _h().baseFilename
 
-    return SummaryWriter(log_dir=log_dir, filename_suffix='-'+log_file_name.split('/')[-1].split('.')[0])
+    return SummaryWriter(log_dir=log_dir, filename_suffix='-'+log_file_name.split('/')[-1].split('.')[0]+suffix)
