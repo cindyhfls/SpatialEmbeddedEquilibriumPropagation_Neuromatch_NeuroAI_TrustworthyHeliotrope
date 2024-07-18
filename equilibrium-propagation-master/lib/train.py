@@ -163,12 +163,12 @@ def train_backprop(model, train_loader, criterion, optimizer):
     
     for batch_idx, (inputs, targets) in enumerate(train_loader):
         inputs, targets = inputs.to(config.device), targets.to(config.device)
-        
+        inputs = inputs.view(inputs.size(0), -1)
         # Forward pass
         outputs = model(inputs)
-        
+
         # Compute loss
-        loss = criterion(outputs, targets)
+        loss = criterion(outputs, targets.float())
         
         # Backward pass and optimize
         optimizer.zero_grad()  # Clear existing gradients
@@ -177,17 +177,63 @@ def train_backprop(model, train_loader, criterion, optimizer):
         
         # Statistics
         total_loss += loss.item()
-        _, predicted = torch.max(outputs.data, 1)
+        predicted = torch.argmax(outputs.data, 1)
+        targetmax = torch.argmax(targets.data, 1)
+        
         total += targets.size(0)
-        correct += (predicted == targets).sum().item()
+        correct += (predicted == targetmax).sum().item()
         
         # Log every 10th of the dataset
         if batch_idx % (len(train_loader) // 10) == 0:
-            logging.info('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-                epoch, batch_idx * len(inputs), len(train_loader.dataset),
+            logging.info('[{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+                 batch_idx * len(inputs), len(train_loader.dataset),
                 100. * batch_idx / len(train_loader), loss.item()))
     
     # Log after each epoch
     logging.info('Epoch Finished: Avg. Loss: {:.4f}, Accuracy: {:.2f}%'.format(
         total_loss / len(train_loader), 100. * correct / total))
+
+def test_backprop(model, test_loader, criterion):
+    """
+    Evaluate prediction accuracy of a model on a given test set.
+
+    Args:
+        model: A torch.nn.Module neural network model.
+        test_loader: DataLoader containing the test dataset.
+        criterion: Loss function used to compute the model loss.
+
+    Returns:
+        Test accuracy
+        Mean loss of the model per batch
+    """
+    model.eval()  # Set the model to evaluation mode
+    total_loss = 0.0
+    correct = 0
+    total = 0
+
+    with torch.no_grad():  # Disable gradient computation
+        for batch_idx, (inputs, targets) in enumerate(test_loader):
+            inputs, targets = inputs.to(config.device), targets.to(config.device)
+            inputs = inputs.view(inputs.size(0), -1)
+            # Forward pass
+            outputs = model(inputs)
+            
+            # Compute loss
+            loss = criterion(outputs, targets.float())
+            
+            # Statistics
+            total_loss += loss.item()
+            predicted = torch.argmax(outputs.data, 1)
+            targetmax = torch.argmax(targets.data, 1)
+            total += targets.size(0)
+            correct += (predicted == targetmax).sum().item()
+
+    # Calculate accuracy and average loss
+    accuracy = 100. * correct / total
+    avg_loss = total_loss / len(test_loader)
+
+    logging.info('Test Set: Avg. Loss: {:.4f}, Accuracy: {:.2f}%'.format(
+        avg_loss, accuracy))
+
+    return accuracy, avg_loss
 
