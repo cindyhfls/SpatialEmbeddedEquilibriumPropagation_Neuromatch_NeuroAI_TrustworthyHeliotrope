@@ -1,0 +1,13 @@
+{
+    "batch_size": 100,
+    "beta": 1,
+    "c_energy": "squared_error",
+    "dataset": "mnist",
+    "dimensions": [784, 1000, 10],
+    "energy": null,
+    "epochs": 100,
+    "learning_rate": 0.001,
+    "nonlinearity": "sigmoid",
+    "optimizer": "adam",
+    "seed": null
+}

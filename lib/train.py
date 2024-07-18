@@ -164,12 +164,14 @@ def train_backprop(model, train_loader, criterion, optimizer):
     
     for batch_idx, (inputs, targets) in enumerate(train_loader):
         inputs, targets = inputs.to(config.device), targets.to(config.device)
+        inputs = inputs.view(inputs.size(0), -1)
+
         
         # Forward pass
         outputs = model(inputs)
         
         # Compute loss
-        loss = criterion(outputs, targets)
+        loss = criterion(outputs, targets.float())
         
         # Backward pass and optimize
         optimizer.zero_grad()  # Clear existing gradients
@@ -178,9 +180,9 @@ def train_backprop(model, train_loader, criterion, optimizer):
         
         # Statistics
         total_loss += loss.item()
-        _, predicted = torch.max(outputs.data, 1)
+        predicted = torch.argmax(outputs.data, 1)
         total += targets.size(0)
-        correct += (predicted == targets).sum().item()
+        correct += (predicted == torch.argmax(targets,1)).sum().item()
         
         # Log every 10th of the dataset
         if batch_idx % (len(train_loader) // 10) == 0:
@@ -235,17 +237,3 @@ def test_backprop(model, test_loader, criterion):
         avg_loss, accuracy))
 
     return accuracy, avg_loss
-
-def train_model(model, *args, **kwargs):
-    if EnergyBasedModel in model.__class__.__bases__:
-        train(model, *args, **kwargs)
-    else:
-        train_backprop(model, *args, **kwargs)
-
-def test_model():
-    if EnergyBasedModel in model.__class__.__bases__:
-        train(model, *args, **kwargs)
-    else:
-        train_backprop(model, *args, **kwargs)
-
-

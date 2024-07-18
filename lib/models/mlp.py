@@ -1,6 +1,6 @@
 import torch
 
-import config
+import lib.config as config
 
 class MLP(torch.nn.Module):
     def __init__(self, dimensions, batch_size, phi):

@@ -52,22 +52,29 @@ def create_activations(name, n_layers):
     return [lambda x: x] + [phi_l] * (n_layers - 1)
 
 
-def create_cost(name, beta):
+def create_cost(name, model_type, beta):
     """
     Create a supervised learning cost function used to nudge
     the network towards a desired state during training.
 
     Args:
         name: Name of the cost function
+        model_type: See argv 'energy', if None cost for mlp
         beta: Scalar weighting factor of the cost function
 
     Returns:
         CEnergy object
     """
     if name == "squared_error":
-        return cost.SquaredError(beta)
+        if model_type:
+            return cost.SquaredError(beta)
+        else:
+            return torch.nn.functional.mse_loss
     elif name == "cross_entropy":
-        return cost.CrossEntropy(beta)
+        if model_type:
+            return cost.CrossEntropy(beta)
+        else:
+            return torch.nn.functional.cross_entropy
     else:
         raise ValueError("Cost function \"{}\" not defined".format(name))
 

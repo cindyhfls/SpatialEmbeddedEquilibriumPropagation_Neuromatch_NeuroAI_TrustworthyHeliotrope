@@ -2,11 +2,12 @@ import argparse
 import json
 import logging
 import sys
+from functools import partial
 
 import torch
 
 from lib import config, train, utils, seeds
-from lib.models import energy
+from lib.models import energy, mlp
 from lib.data import mnist as data
 
 def load_default_config(energy):
@@ -24,7 +25,7 @@ def load_default_config(energy):
 	elif energy == "cond_gaussian":
 		default_config = "etc/energy_cond_gaussian.json"
 	else:
-		raise ValueError("Energy based model \"{}\" not defined.".format(energy))
+		default_config = "etc/bp.json"
 
 	with open(default_config) as config_json_file:
 		cfg = json.load(config_json_file)
@@ -52,8 +53,8 @@ def parse_shell_args(args):
 						default=argparse.SUPPRESS, help="Supervised learning cost function.")
 	parser.add_argument("--dimensions", type=int, nargs="+",
 						default=argparse.SUPPRESS, help="Dimensions of the neural network.")
-	parser.add_argument("--energy", choices=["cond_gaussian", "restr_hopfield"],
-						default="cond_gaussian", help="Type of energy-based model.")
+	parser.add_argument("--energy", choices=["cond_gaussian", "restr_hopfield", None],
+						default=None, help="Type of energy-based model.")
 	parser.add_argument("--epochs", type=int, default=argparse.SUPPRESS,
 						help="Number of epochs to train.")
 	parser.add_argument("--fast_ff_init", action='store_true', default=argparse.SUPPRESS,
@@ -87,7 +88,7 @@ def run_energy_model_mnist(cfg):
 		
 
 	# Create the cost function to be optimized by the model
-	c_energy = utils.create_cost(cfg['c_energy'], cfg['beta'])
+	c_energy = utils.create_cost(cfg['c_energy'], cfg["energy"], cfg['beta'])
 
 	# Create activation functions for every layer as a list
 	phi = utils.create_activations(cfg['nonlinearity'], len(cfg['dimensions']))
@@ -100,7 +101,7 @@ def run_energy_model_mnist(cfg):
 		model = energy.ConditionalGaussian(
 			cfg['dimensions'], c_energy, cfg['batch_size'], phi).to(config.device)
 	else:
-		raise ValueError(f'Energy based model \"{cfg["energy"]}\" not defined.')
+		model = mlp.MLP(cfg['dimensions'], cfg['batch_size'], phi).to(config.device)
 
 	# Define optimizer (may include l2 regularization via weight_decay)
 	w_optimizer = utils.create_optimizer(model, cfg['optimizer'],  lr=cfg['learning_rate'])
@@ -111,17 +112,30 @@ def run_energy_model_mnist(cfg):
 	logging.info("Start training with parametrization:\n{}".format(
 		json.dumps(cfg, indent=4, sort_keys=True)))
 
+	if cfg["energy"]:
+		train_dict = {'w_optimizer': w_optimizer}
+		test_dict = {'dynamics': cfg['dynamics'], 'fast_init': cfg["fast_ff_init"]}
+		train_model = partial(train.train, **train_dict, **test_dict)
+		test_model = partial(train.test, **test_dict)
+		legend = 'mean_E'
+	else:
+		train_dict = {'optimizer': w_optimizer}
+		test_dict = {'criterion': c_energy}
+		train_model = partial(train.train_backprop, **train_dict, **test_dict)
+		test_model = partial(train.test_backprop, **test_dict)
+		legend = 'mean_loss'
+
 	for epoch in range(1, cfg['epochs'] + 1):
 		# Training
-		train.train(model, mnist_train, cfg['dynamics'], w_optimizer, cfg["fast_ff_init"])
+		train_model(model, mnist_train)
 
 		# Testing
-		test_acc, test_energy = train.test(model, mnist_test, cfg['dynamics'], cfg["fast_ff_init"])
+		test_acc, test_energy = test_model(model, mnist_test)
 
 		# Logging
 		logging.info(
-			"epoch: {} \t test_acc: {:.4f} \t mean_E: {:.4f}".format(
-				epoch, test_acc, test_energy)
+			"epoch: {} \t test_acc: {:.4f} \t {}: {:.4f}".format(
+				epoch, test_acc, legend, test_energy)
 		)
 
 
@@ -136,7 +150,7 @@ if __name__ == '__main__':
 	cfg.update(user_config)
 
 	# Setup global logger and logging directory
-	config.setup_logging(cfg["energy"] + "_" + cfg["c_energy"] + "_" + cfg["dataset"],
+	config.setup_logging(cfg["energy"] if cfg["energy"] else "bp" + "_" + cfg["c_energy"] + "_" + cfg["dataset"],
 						dir=cfg['log_dir'])
 
 	# Run the script using the created paramter configuration
