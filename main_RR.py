@@ -125,18 +125,42 @@ def run_energy_model_mnist(cfg):
 		test_model = partial(train.test_backprop, **test_dict)
 		legend = 'mean_loss'
 
+	# record the validation accuracy of each epoch for early stopping
+	PATIENCE = 2
+	wait = 0
+	best_val_acc = 0.0
+
 	for epoch in range(1, cfg['epochs'] + 1):
 		# Training
 		train_model(model, mnist_train)
+
+		# Validation
+		val_acc, val_energy = test_model(model, mnist_val)
+
+		# Logging
+		logging.info(
+			"epoch: {} \t VAL val_acc: {:.4f} \t {}: {:.4f}".format(
+				epoch, val_acc, legend, val_energy)
+		)
 
 		# Testing
 		test_acc, test_energy = test_model(model, mnist_test)
 
 		# Logging
 		logging.info(
-			"epoch: {} \t test_acc: {:.4f} \t {}: {:.4f}".format(
+			"epoch: {} \t TEST test_acc: {:.4f} \t {}: {:.4f}".format(
 				epoch, test_acc, legend, test_energy)
 		)
+
+		# early stopping
+		if val_acc > best_val_acc:
+			best_val_acc = val_acc
+			wait = 0
+		else:
+			wait += 1
+			if wait >= PATIENCE:
+				logging.info(f'Early stopping at epoch {epoch}')
+				break
 
 
 if __name__ == '__main__':
