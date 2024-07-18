@@ -1,0 +1,5 @@
+# Exclude the data folder (containing datasets), exclude new logs for exp.s in equilibrium-propagation-master except for default example
+/data
+/equilibrium-propagation-master/log/*
+!/equilibrium-propagation-master/log/20191229_1332_cond_gaussian_cross_entropy_mnist.log
+!/equilibrium-propagation-master/log/20191229_1332_restr_hopfield_squared_error_mnist
