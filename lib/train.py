@@ -98,7 +98,14 @@ def test(model, test_loader, dynamics, fast_init):
             test_E += float(torch.sum(model.E))
             total += x_batch.size(0)
 
-    return correct / total, test_E / total
+    # Calculate accuracy and average loss
+    accuracy = 100. * correct / total
+    avg_E = test_E / total
+
+    logging.info('Test Set: Avg. Loss: {:.4f}, Accuracy: {:.2f}%'.format(
+        avg_E, accuracy))
+
+    return accuracy, avg_E
 
 
 def train(model, train_loader, dynamics, w_optimizer, fast_init):
@@ -156,13 +163,24 @@ def train(model, train_loader, dynamics, w_optimizer, fast_init):
             logging.info('{:.0f}%:\tE: {:.2f}\tdE {:.2f}\tbatch_acc {:.4f}'.format(
                 100. * batch_idx / len(train_loader), torch.mean(model.E), dE, batch_acc))
         
+        # Extract prediction as the output unit with the strongest activity
+        output = predict_batch(model, x_batch, dynamics, fast_init)
+        prediction = torch.argmax(output, 1)
         with torch.no_grad():
             # Compute train batch accuracy, energy and store number of seen batches
             correct += float(torch.sum(prediction == y_batch.argmax(dim=1)))
             train_E += float(torch.sum(model.E))
             total += x_batch.size(0)
 
-    return correct / total, train_E / total
+    # Calculate accuracy and average loss
+    accuracy = 100. * correct / total
+    avg_E = train_E / total
+
+    # Log after each epoch
+    logging.info('Epoch Finished: Avg. Loss: {:.4f}, Accuracy: {:.2f}%'.format(
+        avg_E, accuracy))
+
+    return accuracy, avg_E
 
 def train_backprop(model, train_loader, criterion, optimizer):
     """

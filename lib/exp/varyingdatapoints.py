@@ -55,12 +55,12 @@ def run_exp(cfg):
 		writer.flush()
 		writer.close()
 
-def read_exp_data(file_glob, scalar_tag):
+def read_exp_data(file_glob, scalar_tag, _show=False, _save=True, _fig_name='./log/BP_vd_N.pdf'):
 	training_points = (10, 100, 1000, 10000)
 	N_dict = OrderedDict()
 	for _point in training_points:
 		N_dict[f'{_point}']=None
-	files = glob.glob(f'*{file_glob}*', root_dir='log/')
+	files = glob.glob(f'events*{file_glob}*', root_dir='log/')
 	for file in files:
 		N = file.split('N')[-1]
 		N_dict[f'{N}']=f'log/{file}'
@@ -72,4 +72,4 @@ def read_exp_data(file_glob, scalar_tag):
 	plot_data = {key:_dict[scalar_tag] for key, _dict in N_dict.items()}
 	print(plot_data)
 	label_dict = {'test_loss': ('Test cost', 'log'),'test_acc':('Test accuracy','linear'), 'test_E':('Test E','symlog')}
-	plot_varying_datapoints(plot_data, fig_name='BP_vd_N', label=label_dict[scalar_tag][0], yscale=label_dict[scalar_tag][1])
+	plot_varying_datapoints(plot_data, fig_name=_fig_name, label=label_dict[scalar_tag][0], yscale=label_dict[scalar_tag][1], _show=_show, _save=_save)

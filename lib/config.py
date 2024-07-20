@@ -37,54 +37,59 @@ writer = None
 
 
 def setup_logging(name, dir=""):
-    """
-    Setup the logging device to log into a uniquely created directory.
+	"""
+	Setup the logging device to log into a uniquely created directory.
 
-    Args:
-        name: Name of the directory for the log-files.
-        dir: Optional sub-directory within log
-    """
-    # Setup global log name and directory
-    global log_name
-    log_name = name
+	Args:
+		name: Name of the directory for the log-files.
+		dir: Optional sub-directory within log
+	"""
+	# Setup global log name and directory
+	global log_name
+	log_name = name
 
-    # Setup global logging directory
-    global log_dir
-    log_dir = os.path.join("log", dir)
+	# Setup global logging directory
+	global log_dir
+	log_dir = os.path.join("log", dir)
 
-    # Create the logging folder if it does not exist already
-    if not os.path.isdir(log_dir):
-        os.makedirs(log_dir)
+	# Create the logging folder if it does not exist already
+	if not os.path.isdir(log_dir):
+		os.makedirs(log_dir)
 
-    # Need to reload logging as otherwise the logger might be captured by another library
-    reload(logging)
+	# Need to reload logging as otherwise the logger might be captured by another library
+	reload(logging)
 
-    # Setup global logger
-    logging.basicConfig(
-        level=logging.INFO,
-        format="[%(levelname)-5.5s %(asctime)s] %(message)s",
-        datefmt='%Y/%m/%d - %H:%M:%S(%Z)',
-        handlers=[
-            logging.FileHandler(os.path.join(
-                log_dir, time.strftime("%Y%m%d_%H%M") + "_" + name + ".log")
-            ),
-            logging.StreamHandler()
-        ])
+	# Setup global logger
+	logging.basicConfig(
+		level=logging.INFO,
+		format="[%(levelname)-5.5s %(asctime)s] %(message)s",
+		datefmt='%Y/%m/%d - %H:%M:%S(%Z)',
+		handlers=[
+			logging.FileHandler(os.path.join(
+				log_dir, time.strftime("%Y%m%d_%H%M") + "_" + name + ".log")
+			),
+			logging.StreamHandler()
+		])
     
 class dummySummaryWriter():
-    def add_scalar(self, *args, **kwargs):
-        pass
-    def flush(self):
-        pass
-    def close(self):
-        pass
+	def add_scalar(self, *args, **kwargs):
+		pass
+	def flush(self):
+		pass
+	def close(self):
+		pass
+
+def get_log_name():
+	for _h in logging._handlerList:
+		if isinstance(_h(), logging.FileHandler):
+			log_file_name = _h().baseFilename
+	return log_file_name.split('/')[-1].split('.')[0]
+
 
 def setup_writer(no_dummy=True, suffix=''):
-    if not no_dummy:
-        return dummySummaryWriter()
+	if not no_dummy:
+		return dummySummaryWriter()
 
-    for _h in logging._handlerList:
-        if isinstance(_h(), logging.FileHandler):
-            log_file_name = _h().baseFilename
+	log_file_name = get_log_name()
 
-    return SummaryWriter(log_dir=log_dir, filename_suffix='-'+log_file_name.split('/')[-1].split('.')[0]+suffix)
+	return SummaryWriter(log_dir=log_dir, filename_suffix='-'+log_file_name+suffix)

@@ -2,6 +2,7 @@ import argparse
 import json
 import logging
 import sys
+import glob
 # import time
 
 # import torch
@@ -142,11 +143,16 @@ def default_main(exp):
 
 
 
-def plot_single(file='./log/events.out.tfevents.1721302333.5363a0cc7039.153444.0bp_cross_entropy_mnist'):
-	ea = utils.load_tensorboard_data(file)
+def plot_single(file_glob, _show=False, _save=True):
+	files = glob.glob(f'events*{file_glob}*', root_dir='log/')
+	if len(files)>1:
+		raise ValueError(f'More than one file had been found:{files}\nExpected to find only one, please refine the `file_glob` argument.')
+	elif len(files)==0:
+		raise ValueError('No event file was found, please make sure an event file including the content of the `file_glob` argument exists in `./log`.')
+	ea = utils.load_tensorboard_data('log/'+files[0])
 	a = utils.extract_sacalars_from_tensorboard_ea(ea)
 	a= {key:tuple(df.value.values) for key, df in a.items()}
-	plot.plot_single_model_train_metrics(a)
+	plot.plot_single_model_train_metrics(a, _show, _save)
 
 
 if __name__ == '__main__':

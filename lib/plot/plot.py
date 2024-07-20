@@ -6,8 +6,14 @@ from matplotlib.lines import Line2D
 import matplotlib.pyplot as plt
 plt.style.use("https://raw.githubusercontent.com/NeuromatchAcademy/course-content/main/nma.mplstyle")
 
-def plot_single_model_train_metrics(value_dict):
+def plot_single_model_train_metrics(value_dict, _show=False, _save=True, _fig_name='./log/test_plot.pdf'):
 	# Create a single plot for all training costs with a logarithmic scale
+	if 'train_loss' in value_dict.keys():
+		_cost_legend = 'loss'
+	elif 'train_E' in value_dict.keys():
+		_cost_legend = 'E'
+	else:
+		raise ValueError(f"Train cost metric not recognized in {value_dict.keys()} was expecting something in ('train_loss', 'train_E').")
 	with plt.xkcd():
 		plt.figure(figsize=(8, 6))  # Set the figure size
 		####
@@ -27,17 +33,17 @@ def plot_single_model_train_metrics(value_dict):
 
 
 		ax2 = ax1.twinx()  # instantiate a second Axes that shares the same x-axis
-		ax2.set_ylabel('loss')  # we already handled the x-label with ax1
+		ax2.set_ylabel('Cost (log scale)')  # we already handled the x-label with ax1
 		for key, val in colour.items():
-			ax2.plot(t, value_dict[key+'_loss'], color=val, linestyle='--', label=key+'_loss')
+			ax2.plot(t, value_dict[key+f'_{_cost_legend}'], color=val, linestyle='--', label=key+f'_{_cost_legend}')
 		ax2.tick_params(axis='y', labelsize='small', length=6, width=3, which='both', direction='out')
 		# ax1.spines['right'].set_visible(True)
 		plt.axvline(x = ax2.get_xlim()[-1], color = 'black', linestyle = '--') 
 
 		####
 		plt.xlabel('Epochs')
-		plt.ylabel('Cost (log scale)')
-		plt.title('Acc. & Loss')
+		# plt.ylabel('Cost (log scale)')
+		plt.title('Acc. & Cost')
 		plt.yscale('log')
 
 		# {
@@ -53,10 +59,12 @@ def plot_single_model_train_metrics(value_dict):
 		# plt.legend()
 		plt.grid(True)
 		fig.tight_layout()  # otherwise the right y-label is slightly clipped
-		plt.savefig('./log/test_plot.pdf')
+		if _save:
+			plt.savefig(_fig_name)
+		if _show:
+			plt.show()
 
-
-def plot_varying_datapoints(plot_data, fig_name, label, yscale):
+def plot_varying_datapoints(plot_data, fig_name, label, yscale, _show=False, _save=True):
 	# Create a single plot for all training costs with a logarithmic scale
 	with plt.xkcd():
 		plt.figure(figsize=(8, 6))  # Set the figure size
@@ -72,7 +80,9 @@ def plot_varying_datapoints(plot_data, fig_name, label, yscale):
 		plt.yscale(yscale)
 		plt.legend()
 		plt.grid(True)
-		plt.savefig(f'./log/{fig_name}.pdf')
 
-
+		if _save:
+			plt.savefig(fig_name)
+		if _show:
+			plt.show()
 
