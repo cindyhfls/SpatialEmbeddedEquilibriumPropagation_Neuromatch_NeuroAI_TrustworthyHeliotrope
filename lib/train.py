@@ -105,7 +105,7 @@ def test(model, test_loader, dynamics, fast_init):
     logging.info('Test Set: Avg. Loss: {:.4f}, Accuracy: {:.2f}%'.format(
         avg_E, accuracy))
 
-    return accuracy, avg_E
+    return accuracy, avg_E, prediction
 
 
 def train(model, train_loader, dynamics, w_optimizer, fast_init):
@@ -180,7 +180,7 @@ def train(model, train_loader, dynamics, w_optimizer, fast_init):
     logging.info('Epoch Finished: Avg. Loss: {:.4f}, Accuracy: {:.2f}%'.format(
         avg_E, accuracy))
 
-    return accuracy, avg_E
+    return accuracy, avg_E,prediction
 
 def train_backprop(model, train_loader, criterion, optimizer):
     """
@@ -215,9 +215,9 @@ def train_backprop(model, train_loader, criterion, optimizer):
         
         # Statistics
         total_loss += loss.item()
-        predicted = torch.argmax(outputs.data, 1)
+        prediction = torch.argmax(outputs.data, 1)
         total += targets.size(0)
-        correct += (predicted == torch.argmax(targets,1)).sum().item()
+        correct += (prediction == torch.argmax(targets,1)).sum().item()
         
         # Log every 10th of the dataset
         if not (len(train_loader)>10) or batch_idx % (len(train_loader) // 10) == 0:
@@ -233,7 +233,7 @@ def train_backprop(model, train_loader, criterion, optimizer):
     logging.info('Epoch Finished: Avg. Loss: {:.4f}, Accuracy: {:.2f}%'.format(
         avg_loss, accuracy))
     
-    return accuracy, avg_loss
+    return accuracy, avg_loss, prediction
 
 def test_backprop(model, test_loader, criterion):
     """
@@ -265,10 +265,10 @@ def test_backprop(model, test_loader, criterion):
             
             # Statistics
             total_loss += loss.item()
-            predicted = torch.argmax(outputs.data, 1)
+            prediction = torch.argmax(outputs.data, 1)
             targetmax = torch.argmax(targets.data, 1)
             total += targets.size(0)
-            correct += (predicted == targetmax).sum().item()
+            correct += (prediction == targetmax).sum().item()
 
     # Calculate accuracy and average loss
     accuracy = 100. * correct / total
@@ -277,7 +277,7 @@ def test_backprop(model, test_loader, criterion):
     logging.info('Test Set: Avg. Loss: {:.4f}, Accuracy: {:.2f}%'.format(
         avg_loss, accuracy))
 
-    return accuracy, avg_loss
+    return accuracy, avg_loss, prediction
 
 
 def run_model_training(cfg, model:torch.nn.Module, cost, optimizer:torch.optim.Optimizer, train_dataloader:torch.utils.data.DataLoader, val_dataloader:torch.utils.data.DataLoader, test_dataloader:torch.utils.data.DataLoader, writer:torch.utils.tensorboard.SummaryWriter|config.dummySummaryWriter=config.dummySummaryWriter()):
