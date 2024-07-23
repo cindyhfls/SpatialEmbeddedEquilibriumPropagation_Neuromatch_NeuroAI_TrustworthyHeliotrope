@@ -105,7 +105,7 @@ def test(model, test_loader, dynamics, fast_init):
     logging.info('Test Set: Avg. Loss: {:.4f}, Accuracy: {:.2f}%'.format(
         avg_E, accuracy))
 
-    return accuracy, avg_E, prediction
+    return accuracy, avg_E
 
 
 def train(model, train_loader, dynamics, w_optimizer, fast_init):
@@ -180,7 +180,7 @@ def train(model, train_loader, dynamics, w_optimizer, fast_init):
     logging.info('Epoch Finished: Avg. Loss: {:.4f}, Accuracy: {:.2f}%'.format(
         avg_E, accuracy))
 
-    return accuracy, avg_E,prediction
+    return accuracy, avg_E
 
 def train_backprop(model, train_loader, criterion, optimizer):
     """
@@ -233,7 +233,7 @@ def train_backprop(model, train_loader, criterion, optimizer):
     logging.info('Epoch Finished: Avg. Loss: {:.4f}, Accuracy: {:.2f}%'.format(
         avg_loss, accuracy))
     
-    return accuracy, avg_loss, prediction
+    return accuracy, avg_loss
 
 def test_backprop(model, test_loader, criterion):
     """
@@ -277,7 +277,7 @@ def test_backprop(model, test_loader, criterion):
     logging.info('Test Set: Avg. Loss: {:.4f}, Accuracy: {:.2f}%'.format(
         avg_loss, accuracy))
 
-    return accuracy, avg_loss, prediction
+    return accuracy, avg_loss
 
 
 def run_model_training(cfg, model:torch.nn.Module, cost, optimizer:torch.optim.Optimizer, train_dataloader:torch.utils.data.DataLoader, val_dataloader:torch.utils.data.DataLoader, test_dataloader:torch.utils.data.DataLoader, writer:torch.utils.tensorboard.SummaryWriter|config.dummySummaryWriter=config.dummySummaryWriter()):
