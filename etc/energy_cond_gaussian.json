@@ -6,13 +6,13 @@
     "dimensions": [784, 1000, 10],
     "dynamics": {
         "dt": 0.1,
-        "n_relax": 20,
+        "n_relax": 50,
         "tau": 1,
         "tol": 0
     },
     "energy": "cond_gaussian",
     "epochs": 50,
-    "fast_ff_init": true,
+    "fast_ff_init": false,
     "learning_rate": 0.001,
     "nonlinearity": "sigmoid",
     "optimizer": "adam",

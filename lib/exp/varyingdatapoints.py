@@ -10,7 +10,7 @@ from collections import OrderedDict
 from lib import seeds, utils, config, train
 from lib.data import mnist as data_mnist, utils as data_utils
 from lib.models import energy, mlp
-from lib.plot.plot import plot_varying_datapoints
+from lib.plot.plot import plot_varying_datapoints, plot_varying_datapoints_all_models
 
 def run_exp(cfg):
 
@@ -55,7 +55,7 @@ def run_exp(cfg):
 		writer.flush()
 		writer.close()
 
-def read_exp_data(file_glob, scalar_tag, _show=False, _save=True, _fig_name='./log/BP_vd_N.pdf'):
+def read_exp_data(file_glob:str, scalar_tag:str):
 	training_points = (10, 100, 1000, 10000)
 	N_dict = OrderedDict()
 	for _point in training_points:
@@ -68,8 +68,26 @@ def read_exp_data(file_glob, scalar_tag, _show=False, _save=True, _fig_name='./l
 		ea = utils.load_tensorboard_data(file)
 		a = utils.extract_sacalars_from_tensorboard_ea(ea)
 		N_dict[f'{N_train_data}'] = {key:tuple(df.value.values) for key, df in a.items()}
-	# plot_data = {key:_dict['test_loss'] if 'test_loss' in _dict.keys() else _dict['test_E'] for key, _dict in N_dict.items()}
-	plot_data = {key:_dict[scalar_tag] for key, _dict in N_dict.items()}
+	# _data = {key:_dict['test_loss'] if 'test_loss' in _dict.keys() else _dict['test_E'] for key, _dict in N_dict.items()}
+	_data = {key:_dict[scalar_tag] for key, _dict in N_dict.items()}
+	return _data
+
+def plot_exp_data(plot_data:dict, scalar_tag:str, _show:bool=False, _save:bool=True, _fig_name:str='./log/BP_vd_N.pdf'):
 	print(plot_data)
 	label_dict = {'test_loss': ('Test cost', 'log'),'test_acc':('Test accuracy','linear'), 'test_E':('Test E','symlog')}
 	plot_varying_datapoints(plot_data, fig_name=_fig_name, label=label_dict[scalar_tag][0], yscale=label_dict[scalar_tag][1], _show=_show, _save=_save)
+
+def read_N_plot_exp_data(file_glob:str, scalar_tag:str, _show:bool=False, _save:bool=True, _fig_name:str='./log/BP_vd_N.pdf'):
+	plot_exp_data(read_exp_data(file_glob, scalar_tag), scalar_tag, _show=False, _save=True, _fig_name='./log/BP_vd_N.pdf')
+
+
+def read_multi_exp_data(file_globs:tuple, scalar_tag:str, names:tuple):
+	_res = {}
+	for _file_glob, _name in zip(file_globs, names):
+		_res[_name] = read_exp_data(_file_glob, scalar_tag)
+	return _res
+
+def read_N_plot_multi_exp_data(file_globs, scalar_tag, names, _show:bool=False, _save:bool=True, _fig_name:str='./log/BP_vd_N.pdf'):
+	_plot_data = read_multi_exp_data(file_globs, scalar_tag, names)
+	print(_plot_data)
+	plot_varying_datapoints_all_models(_plot_data, fig_name=_fig_name, label='Test accuracy', yscale='linear', _show=_show, _save=_save)
