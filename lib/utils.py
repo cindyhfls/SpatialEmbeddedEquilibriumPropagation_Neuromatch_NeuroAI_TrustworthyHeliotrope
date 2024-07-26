@@ -18,7 +18,8 @@ def create_activations(name, n_layers):
 		List of activation functions for every layer
 	"""
 	if name == 'relu':
-		phi_l = torch.relu
+		# phi_l = torch.relu
+		phi_l = torch.nn.functional.relu
 	elif name == "leaky_relu":
 		def phi_l(x): torch.nn.functional.leaky_relu(x, negative_slope=0.05)
 	elif name == 'softplus':

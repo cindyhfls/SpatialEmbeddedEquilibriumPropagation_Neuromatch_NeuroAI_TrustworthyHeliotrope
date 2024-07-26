@@ -86,7 +86,7 @@ def get_log_name():
 	return log_file_name.split('/')[-1].split('.')[0]
 
 
-def setup_writer(no_dummy=True, suffix=''):
+def setup_writer(no_dummy:bool=True, suffix:str=''):
 	if not no_dummy:
 		return dummySummaryWriter()
 

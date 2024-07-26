@@ -9,6 +9,7 @@ transformers
 tqdm
 
 # Repr. & stat. analysis
+torchlens
 rsatoolbox
 
 # Plotting
@@ -33,7 +34,6 @@ notebook
 
 # ffmpeg
 # imageio-ffmpeg
-# torchlens
 
 # git+https://github.com/neuromatch/TextRecognitionDataGenerator#egg=trdg
 # git+https://github.com/neuromatch/GNS-Modeling#egg=gns

@@ -7,47 +7,26 @@ from collections import OrderedDict
 
 
 
-from lib import seeds, utils, config, train
-from lib.data import mnist as data_mnist, utils as data_utils
-from lib.models import energy, mlp
+from lib import utils, config, train
+from lib.data import utils as data_utils
+from lib.exp.utils import exp_init, set_model_N_optim
 from lib.plot.plot import plot_varying_datapoints, plot_varying_datapoints_all_models
 
 def run_exp(cfg):
 
 	training_points = (10, 100, 1000, 10000)
 
-	# Initialize seed if specified (might slow down the model)
-	if cfg['seed'] is not None:
-		seeds.set_seed(cfg['seed'])
-
-	# Create the cost function to be optimized by the model
-	c_energy = utils.create_cost(cfg['c_energy'], cfg["energy"], cfg['beta'])
-
-	# Create activation functions for every layer as a list
-	phi = utils.create_activations(cfg['nonlinearity'], len(cfg['dimensions']))
-
-	# Create torch data loaders with the MNIST data set
-	train_dataloader, val_dataloader, test_dataloader = data_mnist.create_mnist_loaders(cfg['batch_size'])
+	c_energy, phi, train_dataloader, val_dataloader, test_dataloader = exp_init(cfg)
 
 	logging.info("Start training with parametrization:\n{}".format(
 		json.dumps(cfg, indent=4, sort_keys=True)))
 
 	for N_train_data in training_points:
 		logging.info(f"[ Running training of model for: N={N_train_data} ]")
-		# Initialize energy based model
-		if cfg["energy"] == "restr_hopfield":
-			model = energy.RestrictedHopfield(
-				cfg['dimensions'], c_energy, cfg['batch_size'], phi).to(config.device)
-		elif cfg["energy"] == "cond_gaussian":
-			model = energy.ConditionalGaussian(
-				cfg['dimensions'], c_energy, cfg['batch_size'], phi).to(config.device)
-		else:
-			model = mlp.MLP(cfg['dimensions'], cfg['batch_size'], phi).to(config.device)
 
+		model, w_optimizer = set_model_N_optim(cfg, c_energy, phi)
+		
 		sampled_train_loader, sampled_val_loader = data_utils.get_random_sample_train_val(train_dataloader.dataset, val_dataloader.dataset, cfg['batch_size'], N_train_data)
-
-		# Define optimizer (may include l2 regularization via weight_decay)
-		w_optimizer = utils.create_optimizer(model, cfg['optimizer'],  lr=cfg['learning_rate'])
 
 		# Update the train function call to get training costs
 		writer = config.setup_writer(cfg['summary_writer'], suffix=f'_N{N_train_data}')
@@ -81,13 +60,15 @@ def read_N_plot_exp_data(file_glob:str, scalar_tag:str, _show:bool=False, _save:
 	plot_exp_data(read_exp_data(file_glob, scalar_tag), scalar_tag, _show=False, _save=True, _fig_name='./log/BP_vd_N.pdf')
 
 
-def read_multi_exp_data(file_globs:tuple, scalar_tag:str, names:tuple):
+def read_multi_exp_data(file_globs:tuple[str]|list[str], scalar_tag:str, names:tuple[str]|list[str]):
 	_res = {}
 	for _file_glob, _name in zip(file_globs, names):
 		_res[_name] = read_exp_data(_file_glob, scalar_tag)
 	return _res
 
-def read_N_plot_multi_exp_data(file_globs, scalar_tag, names, _show:bool=False, _save:bool=True, _fig_name:str='./log/BP_vd_N.pdf'):
+def read_N_plot_multi_exp_data(file_globs:tuple[str]|list[str], scalar_tag:str, names:tuple[str]|list[str], _show:bool=False, _save:bool=True, _fig_name:str='./log/BP_vd_N.pdf'):
 	_plot_data = read_multi_exp_data(file_globs, scalar_tag, names)
 	print(_plot_data)
 	plot_varying_datapoints_all_models(_plot_data, fig_name=_fig_name, label='Test accuracy', yscale='linear', _show=_show, _save=_save)
+
+

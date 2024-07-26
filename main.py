@@ -143,7 +143,7 @@ def default_main(exp):
 
 
 
-def plot_single(file_glob, _show=False, _save=True):
+def plot_single(file_glob:str, _show:bool=False, _save:bool=True):
 	files = glob.glob(f'events*{file_glob}*', root_dir='log/')
 	if len(files)>1:
 		raise ValueError(f'More than one file had been found:{files}\nExpected to find only one, please refine the `file_glob` argument.')

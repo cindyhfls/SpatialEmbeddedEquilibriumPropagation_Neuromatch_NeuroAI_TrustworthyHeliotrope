@@ -6,7 +6,7 @@ from matplotlib.lines import Line2D
 import matplotlib.pyplot as plt
 plt.style.use("https://raw.githubusercontent.com/NeuromatchAcademy/course-content/main/nma.mplstyle")
 
-def plot_single_model_train_metrics(value_dict, _show=False, _save=True, _fig_name='./log/test_plot.pdf'):
+def plot_single_model_train_metrics(value_dict:dict, _show:bool=False, _save:bool=True, _fig_name:str='./log/test_plot.pdf'):
 	# Create a single plot for all training costs with a logarithmic scale
 	if 'train_loss' in value_dict.keys():
 		_cost_legend = 'loss'
@@ -64,8 +64,7 @@ def plot_single_model_train_metrics(value_dict, _show=False, _save=True, _fig_na
 		if _show:
 			plt.show()
 
-def plot_varying_datapoints(plot_data, fig_name, label, yscale, _show=False, _save=True):
-	# Create a single plot for all training costs with a logarithmic scale
+def plot_varying_datapoints(plot_data:dict, fig_name:str, label:str, yscale:str, _show:bool=False, _save:bool=True):
 	with plt.xkcd():
 		plt.figure(figsize=(8, 6))  # Set the figure size
 		
@@ -86,8 +85,7 @@ def plot_varying_datapoints(plot_data, fig_name, label, yscale, _show=False, _sa
 		if _show:
 			plt.show()
 
-def plot_varying_datapoints_all_models(plot_data, fig_name, label, yscale, _show=False, _save=True):
-	# Create a single plot for all training costs with a logarithmic scale
+def plot_varying_datapoints_all_models(plot_data:dict, fig_name:str, label:str, yscale:str, _show:bool=False, _save:bool=True):
 	with plt.xkcd():
 		plt.figure(figsize=(8, 6))  # Set the figure 
 		_cmap = plt.cm.get_cmap('viridis', len(plot_data))
@@ -113,3 +111,36 @@ def plot_varying_datapoints_all_models(plot_data, fig_name, label, yscale, _show
 			plt.savefig(fig_name)
 		if _show:
 			plt.show()
+
+def plot_varying_datapoints_all_model_types(plot_data:dict, fig_name:str, label:str, yscale:str, _show:bool=False, _save:bool=True):
+	with plt.xkcd():
+		plt.figure(figsize=(8, 6))  # Set the figure 
+		_cmap = plt.cm.get_cmap('viridis', len(plot_data))
+		_linestyles = ('solid', 'dotted', 'dashed', 'dashdot', 'loosely dotted', 'dotted', 'densely dotted', 'long dash with offset', 'loosely dashed', 'densely dashed', 'loosely dashdotted', 'dashdotted', 'densely dashdotted', 'dashdotdotted', 'loosely dashdotdotted', 'densely dashdotdotted')
+		
+		for _colour_idx, (_model, _data_dict) in enumerate(plot_data.items()):
+			for _linestyle_idx, (n, _data) in enumerate(_data_dict.items()):
+				epochs = range(1,len(_data)+1)
+				test_cost = _data
+				# plt.plot(epochs, test_cost, color=_cmap(_colour_idx), marker='o', linestyle=_linestyles[_linestyle_idx], label=f'{n} tr. pts ({_model})')
+				plt.plot(epochs, test_cost, color=_cmap(_colour_idx), linestyle=_linestyles[_linestyle_idx], label=f'{n} tr. pts ({_model})')
+
+		plt.xlabel('Epochs')
+		plt.ylabel(f'{label} ({yscale} scale)')
+		plt.title(f'{label} over epochs for different training points (classification)')
+		plt.yscale(yscale)
+		# plt.legend()
+		plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+		plt.grid(True)
+		plt.tight_layout()
+
+		if _save:
+			plt.savefig(fig_name)
+		if _show:
+			plt.show()
+
+
+
+# ax.fill_between(x, y1, y2, alpha=.5, linewidth=0)
+
+

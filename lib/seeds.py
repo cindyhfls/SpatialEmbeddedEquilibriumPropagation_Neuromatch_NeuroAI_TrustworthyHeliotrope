@@ -2,7 +2,7 @@ import random
 import numpy as np
 import torch
 
-def set_seed(seed=None, seed_torch=True):
+def set_seed(seed:float=None, seed_torch:bool=True):
 	if seed is None:
 		seed = np.random.choice(2 ** 32)
 	random.seed(seed)

@@ -93,3 +93,8 @@ python 3.6
 pytorch 1.1.0
 torchvision 0.3.0
 ```
+
+
+TODO: Have a look at base model for RSA in tuto!
+
+

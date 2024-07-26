@@ -199,7 +199,7 @@ def train_backprop(model, train_loader, criterion, optimizer):
     
     for batch_idx, (inputs, targets) in enumerate(train_loader):
         inputs, targets = inputs.to(config.device), targets.to(config.device)
-        inputs = inputs.view(inputs.size(0), -1)
+        inputs = inputs.view(inputs.size(0), -1) # tl compat
 
         
         # Forward pass
@@ -256,7 +256,7 @@ def test_backprop(model, test_loader, criterion):
     with torch.no_grad():  # Disable gradient computation
         for batch_idx, (inputs, targets) in enumerate(test_loader):
             inputs, targets = inputs.to(config.device), targets.to(config.device)
-            inputs = inputs.view(inputs.size(0), -1)
+            inputs = inputs.view(inputs.size(0), -1) # tl compat
             # Forward pass
             outputs = model(inputs)
             
