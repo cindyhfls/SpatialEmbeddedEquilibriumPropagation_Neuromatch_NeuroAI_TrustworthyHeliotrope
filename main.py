@@ -139,7 +139,18 @@ def default_main(exp):
 	logging.info(f"Cmd: python {' '.join(sys.argv)}")
 	logging.info(f"Device:\n{config.device}")
 	# Run the script using the created parameter configuration
-	exp(cfg)
+	_result = exp(cfg)
+	# Close logging
+	# logging.info('log file is open')
+	_log_file_name = config.get_log_name()
+	# https://stackoverflow.com/a/61457520/8612123
+	logger = logging.getLogger()
+	while logger.hasHandlers():
+		logger.removeHandler(logger.handlers[0])
+	logging.shutdown()
+	# Return name for log to re-use in plotting function
+	return {'log':_log_file_name, 'result':_result}
+
 
 
 

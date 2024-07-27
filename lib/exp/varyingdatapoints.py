@@ -66,9 +66,9 @@ def read_multi_exp_data(file_globs:tuple[str]|list[str], scalar_tag:str, names:t
 		_res[_name] = read_exp_data(_file_glob, scalar_tag)
 	return _res
 
-def read_N_plot_multi_exp_data(file_globs:tuple[str]|list[str], scalar_tag:str, names:tuple[str]|list[str], _show:bool=False, _save:bool=True, _fig_name:str='./log/BP_vd_N.pdf'):
+def read_N_plot_multi_exp_data(file_globs:tuple[str]|list[str], scalar_tag:str, names:tuple[str]|list[str], _show:bool=False, _save:bool=True, _fig_name:str='./log/BP_vd_N.pdf', plot_fct=plot_varying_datapoints_all_models):
 	_plot_data = read_multi_exp_data(file_globs, scalar_tag, names)
 	print(_plot_data)
-	plot_varying_datapoints_all_models(_plot_data, fig_name=_fig_name, label='Test accuracy', yscale='linear', _show=_show, _save=_save)
+	plot_fct(_plot_data, fig_name=_fig_name, label='Test accuracy', yscale='linear', _show=_show, _save=_save)
 
 

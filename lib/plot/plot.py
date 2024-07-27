@@ -1,6 +1,8 @@
 
 # W1D2_Tutorial1.ipynb
 
+from math import sqrt, ceil
+
 import matplotlib.patches as mpatches
 from matplotlib.lines import Line2D
 import matplotlib.pyplot as plt
@@ -138,6 +140,49 @@ def plot_varying_datapoints_all_model_types(plot_data:dict, fig_name:str, label:
 			plt.savefig(fig_name)
 		if _show:
 			plt.show()
+
+def plot_varying_datapoints_all_model_types_separated(plot_data:dict, fig_name:str, label:str, yscale:str, _show:bool=False, _save:bool=True):
+	with plt.xkcd():
+		plt.figure(figsize=(8, 6))  # Set the figure 
+		_cmap = plt.cm.get_cmap('viridis', len(plot_data))
+		_linestyles = ('solid', 'dotted', 'dashed', 'dashdot', 'loosely dotted', 'dotted', 'densely dotted', 'long dash with offset', 'loosely dashed', 'densely dashed', 'loosely dashdotted', 'dashdotted', 'densely dashdotted', 'dashdotdotted', 'loosely dashdotdotted', 'densely dashdotdotted')
+		
+		nplot = int(len(tuple(plot_data.values())[0].keys()))
+		ncols = int(ceil(sqrt(nplot)))
+		nrows = nplot//ncols+(1 if nplot%ncols else 0)
+		fig, axs = plt.subplots(nrows=nrows, ncols=ncols, sharex=True, sharey=True)
+
+		for _colour_idx, (_model, _data_dict) in enumerate(plot_data.items()):
+			for _linestyle_idx, ((n, _data), _ax) in enumerate(zip(_data_dict.items(),axs.flat)):
+				epochs = range(1,len(_data)+1)
+				test_cost = _data
+				# TODO: Clean-up legend and title for the figure
+				# plt.plot(epochs, test_cost, color=_cmap(_colour_idx), marker='o', linestyle=_linestyles[_linestyle_idx], label=f'{n} tr. pts ({_model})')
+				# _ax.plot(epochs, test_cost, color=_cmap(_colour_idx), linestyle=_linestyles[_linestyle_idx])
+				_ax.plot(epochs, test_cost, color=_cmap(_colour_idx), linestyle=_linestyles[_linestyle_idx], label=f'{_model}')
+				if _colour_idx == 0:
+					_ax.set_title(f'{n} tr. pts')
+				# if _linestyle_idx == 0:
+				# 	_ax.plot(epochs, test_cost, color=_cmap(_colour_idx), linestyle=_linestyles[_linestyle_idx], label=f'{_model}')
+				# else:
+				# 	_ax.plot(epochs, test_cost, color=_cmap(_colour_idx), linestyle=_linestyles[_linestyle_idx])
+
+
+		plt.xlabel('Epochs')
+		plt.ylabel(f'{label} ({yscale} scale)')
+		# plt.title(f'{label} over epochs for different training points (classification)')
+		plt.yscale(yscale)
+		# plt.legend()
+		plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+		# plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+		plt.grid(True)
+		plt.tight_layout()
+
+		if _save:
+			plt.savefig(fig_name)
+		if _show:
+			plt.show()
+
 
 
 
